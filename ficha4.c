@@ -108,21 +108,23 @@ int colorOK(GrafoL g, int cor[])
 
 int homomorfOK(GrafoL g, GrafoL h, int f[])
 {
-    int i, r = 0, dest;
+    int o;
     LAdj a, b;
 
-    for (i = 0; i < NV; ++i)
+    for (o = 0; o < NV; o++)
     {
-        for (a = g[i]; a; a = a->prox)
+        for (a = g[o]; a != NULL; a = a->prox)
         {
-            for (b = h[f[a]]; b; b = b->prox)
-            {
-                if (a->dest != f[b->dest]) // este passo ?
-                    r = 0;
-            }
+            for (b = h[a]; b != NULL; b = b->prox)
+                if (a->dest == f[b->dest])
+                    break;
+
+            if (b == NULL)
+                return 0;
         }
     }
-    return r;
+
+    return 1;
 }
 
 //
@@ -308,4 +310,72 @@ int ordTop(GrafoL g, int ord[])
 }
 
 // 4
-int caminho(int L, int C, char *mapa[L], int ls, int cs, int lf, int cf);
+
+typedef struct coord {
+    int l;
+    int c;
+    int dist;
+} coord;
+
+coord newC(int l, int c) {
+    coord n = {l, c, 0};
+    return n;
+}
+
+int equals(coord a, coord b) {
+    return a.l == b.l && a.c == b.c;
+}
+
+int valid(coord a, int L, int C, char mapa[L][C]) {
+    return (a.l >= 0 && a.l < L) && (a.c >= 0 && a.c < C) && mapa[a.l][a.c] == ' ';
+}
+
+/*
+* O array de visitados é necessário se não estivermos a escrever no array (ASCII print)
+*/
+int caminho (int L, int C, char mapa[L][C], int ls, int cs, int lf, int cf) {
+    int front, end, vis[L][C], i, j;
+    coord queue[2*L*C], curr, dest;
+
+    front = end = 0;
+    dest = newC(lf, cf);
+    queue[end++] = newC(ls, cs); //enqueue
+
+    for (i = 0; i < L; i++)
+        for (j = 0; j < C; j++)
+            vis[i][j] = 0;
+
+    while (front != end) {
+        curr = queue[front++]; //dequeue
+
+        if (equals(curr, dest)) {
+            mapa[curr.l][curr.c] = '$';
+            return curr.dist;
+        }
+
+        if (vis[curr.l][curr.c] == 1) {
+            continue;
+        } else {
+            vis[curr.l][curr.c] = 1;
+        }
+        
+        // ASCII print
+        mapa[curr.l][curr.c] = curr.dist+'0';
+
+        coord next_moves[4] = {
+            {curr.l-1, curr.c, curr.dist+1},
+            {curr.l+1, curr.c, curr.dist+1},
+            {curr.l, curr.c-1, curr.dist+1},
+            {curr.l, curr.c+1, curr.dist+1},
+        };
+
+        for (i = 0; i < 4; i++) {
+            if (valid(next_moves[i], L, C, mapa)) {
+                printf("*%d %d;  ", next_moves[i].l, next_moves[i].c);
+                queue[end++] = next_moves[i];
+            }
+        }
+    }
+
+    return -1;
+}
