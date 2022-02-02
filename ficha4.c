@@ -97,7 +97,7 @@ int colorOK(GrafoL g, int cor[])
     {
         for (d = g[i]; d; d = d->prox)
         {
-            if (cor[i] != cor[d->dest])
+            if (cor[i] == cor[d->dest])
                 r = 0;
         }
     }
